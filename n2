@@ -1,0 +1,19 @@
+system script
+add dont-require-permissions=no name=radius_check_script owner=admin policy=\
+ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="\r\
+\n:local IPADDRMASK [/ip address get value-name=address [find interface=bridge_private]];\r\
+\n:local IPADDR [:pick \$IPADDRMASK 0 [find \$IPADDRMASK \"/\"]];\r\
+\n#log info \$IPADDR\r\
+\n:local pingradius1 ([ ping count=10 10.10.40.32 src-address=\$IPADDR]);\r\
+\n:local pingradius2 ([ ping count=10 10.10.36.52 src-address=\$IPADDR]);\r\
+\n#log info \$pingradius1;\r\
+\n#log info \$pingradius2;\r\
+\n:local zero 0;\r\
+\n:if ( \$pingradius1 = zero && \$pingradius2 = zero ) do={\r\
+\n/user set [find where name=\"divadmin\" && disabled=yes] disabled=no\r\
+\n/ip firewall filter set [fin where comment=external_access && disabled=no] disabled=yes\r\
+\n} else={\r\
+\n:if ( \$pingradius1 != zero || \$pingradius2 != zero ) do={\r\
+\n/user set [find where name=\"divadmin\" && disabled=no] disabled=yes}\r\
+\n/ip firewall filter set [fin where comment=external_access && disabled=yes] disabled=no}\r\
+\n}"
